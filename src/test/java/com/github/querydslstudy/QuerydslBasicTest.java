@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.github.querydslstudy.entity.Member;
 import com.github.querydslstudy.entity.Team;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import javax.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,7 +57,6 @@ public class QuerydslBasicTest {
   @Test
   public void startQuerydsl() {
 
-
     final Member findMember = queryFactory
       .select(member)
       .from(member)
@@ -64,5 +64,54 @@ public class QuerydslBasicTest {
       .fetchOne();
 
     assertThat(findMember.getUsername()).isEqualTo("member1");
+  }
+
+  @Test
+  public void searchAnd() {
+
+    final Member findMember = queryFactory
+      .select(member)
+      .from(member)
+      .where(member.username.eq("member1")
+        .and(member.age.eq(10)))
+      .fetchOne();
+
+    assertThat(findMember.getUsername()).isEqualTo("member1");
+  }
+
+  @Test
+  public void searchAnd2() {
+
+    final Member findMember = queryFactory
+      .select(member)
+      .from(member)
+      .where(member.username.eq("member1"),
+        member.age.eq(10))
+      .fetchOne();
+
+    assertThat(findMember.getUsername()).isEqualTo("member1");
+  }
+
+  @Test
+  public void searchExam() {
+
+    final BooleanExpression equal = member.username.eq("member1"); // username = 'member1'
+    final BooleanExpression notEqual = member.username.ne("member1"); // username != 'member1'
+    final BooleanExpression notEqual2 = member.username.eq("member1").not(); // username != 'member1'
+
+    final BooleanExpression isNotNull = member.username.isNotNull(); // username is not null
+
+    final BooleanExpression in = member.age.in(10, 20); // age in (10, 20)
+    final BooleanExpression notIn = member.age.notIn(10, 20); // age not in (10, 20)
+    final BooleanExpression between = member.age.between(10, 20); // age between 10 and 20
+
+    final BooleanExpression greaterThanOrEqual = member.age.goe(30); // age >= 30
+    final BooleanExpression greaterThan = member.age.gt(30); // age > 30
+    final BooleanExpression lessThanOrEqual = member.age.loe(30); // age <= 30
+    final BooleanExpression lessThan = member.age.lt(30); // agt < 30
+
+    final BooleanExpression like = member.username.like("member%"); // username like 'member%'
+    final BooleanExpression contains = member.username.contains("member"); // username like '%member%'
+    final BooleanExpression startsWith = member.username.startsWith("member%"); // username like 'member%'
   }
 }
