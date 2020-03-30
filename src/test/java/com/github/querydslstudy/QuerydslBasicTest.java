@@ -1,12 +1,15 @@
 package com.github.querydslstudy;
 
 import static com.github.querydslstudy.entity.QMember.member;
+import static com.github.querydslstudy.entity.QTeam.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.github.querydslstudy.entity.Member;
 import com.github.querydslstudy.entity.QMember;
+import com.github.querydslstudy.entity.QTeam;
 import com.github.querydslstudy.entity.Team;
 import com.querydsl.core.QueryResults;
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
@@ -192,5 +195,44 @@ public class QuerydslBasicTest {
     assertThat(results.getLimit()).isEqualTo(2);
     assertThat(results.getOffset()).isEqualTo(1);
     assertThat(results.getResults().size()).isEqualTo(2);
+  }
+
+  @Test
+  public void aggregation() {
+    final List<Tuple> result = queryFactory
+      .select(
+        member.count(),
+        member.age.sum(),
+        member.age.avg(),
+        member.age.min(),
+        member.age.max())
+      .from(member)
+      .fetch();
+
+    final Tuple tuple = result.get(0);
+    assertThat(tuple.get(member.count())).isEqualTo(4);
+    assertThat(tuple.get(member.age.sum())).isEqualTo(100);
+    assertThat(tuple.get(member.age.avg())).isEqualTo(25);
+    assertThat(tuple.get(member.age.min())).isEqualTo(10);
+    assertThat(tuple.get(member.age.max())).isEqualTo(40);
+  }
+
+  @Test
+  public void groupBy() {
+    final List<Tuple> result = queryFactory
+      .select(team.name, member.age.avg())
+      .from(member)
+      .join(member.team, team)
+      .groupBy(team.name)
+      .fetch();
+
+    final Tuple teamA = result.get(0);
+    final Tuple teamB = result.get(1);
+
+    assertThat(teamA.get(team.name)).isEqualTo("teamA");
+    assertThat(teamB.get(team.name)).isEqualTo("teamB");
+
+    assertThat(teamA.get(member.age.avg())).isEqualTo(15);
+    assertThat(teamB.get(member.age.avg())).isEqualTo(35);
   }
 }
