@@ -3,7 +3,7 @@ logging:
     console: '%clr(%d{${LOG_DATEFORMAT_PATTERN:yyyy-MM-dd HH:mm:ss.SSS}}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%logger{39}:%L){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:%wEx}'
   level:
     org.hibernate.SQL: debug
-#    org.hibernate.type: trace
+    org.hibernate.type.descriptor.sql.BasicBinder: trace
 
 spring:
   datasource:
