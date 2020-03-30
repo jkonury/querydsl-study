@@ -4,9 +4,12 @@ import static com.github.querydslstudy.entity.QMember.member;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.github.querydslstudy.entity.Member;
+import com.github.querydslstudy.entity.QMember;
 import com.github.querydslstudy.entity.Team;
+import com.querydsl.core.QueryResults;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.util.List;
 import javax.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -113,5 +116,33 @@ public class QuerydslBasicTest {
     final BooleanExpression like = member.username.like("member%"); // username like 'member%'
     final BooleanExpression contains = member.username.contains("member"); // username like '%member%'
     final BooleanExpression startsWith = member.username.startsWith("member%"); // username like 'member%'
+  }
+
+  @Test
+  public void resultFetch() {
+
+    final List<Member> fetch = queryFactory
+      .selectFrom(member)
+      .fetch();
+
+    final Member fetchOne = queryFactory
+      .selectFrom(member)
+      .where(member.username.eq("member1"))
+      .fetchOne();
+
+    final Member fetchFirst = queryFactory
+      .selectFrom(QMember.member)
+      .fetchFirst();
+
+    final QueryResults<Member> results = queryFactory
+      .selectFrom(member)
+      .fetchResults();
+
+    final long total = results.getTotal();
+    final List<Member> contents = results.getResults();
+
+    final long fetchCount = queryFactory
+      .selectFrom(member)
+      .fetchCount();
   }
 }
