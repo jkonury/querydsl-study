@@ -15,11 +15,13 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -665,6 +667,43 @@ public class QuerydslBasicTest {
     assertThat(result.size()).isEqualTo(1);
   }
 
+  @Test
+  public void dynamicQuery_WhereParam() {
+    final String username = "member1";
+    final int age = 10;
+
+    final List<Member> result = searchMember2(username, age);
+
+    assertThat(result.size()).isEqualTo(1);
+  }
+
+  @Test
+  public void dynamicQuery_Where() {
+    final String username = "member1";
+    final int age = 10;
+
+
+    final List<Member> result = queryFactory
+      .selectFrom(member)
+      .where(searchMember3(username, age))
+      .fetch();
+
+    assertThat(result.size()).isEqualTo(1);
+  }
+
+  private Predicate[] searchMember3(String username, int age) {
+    final List<Predicate> predicates = new ArrayList<>();
+
+    if (StringUtils.isNotBlank(username)) {
+      predicates.add(member.username.eq(username));
+    }
+
+    if (age > 0) {
+      predicates.add(member.age.eq(age));
+    }
+    return predicates.toArray(new Predicate[0]);
+  }
+
   private List<Member> searchMember1(String username, int age) {
     BooleanBuilder builder = new BooleanBuilder();
 
@@ -681,4 +720,32 @@ public class QuerydslBasicTest {
       .where(builder)
       .fetch();
   }
+
+  private List<Member> searchMember2(String username, int age) {
+
+    return queryFactory
+      .selectFrom(member)
+//      .where(usernameEq(username), ageEq(age))
+      .where(allEq(username, age))
+      .fetch();
+  }
+
+  private Predicate allEq(String username, int age) {
+    return usernameEq(username).and(ageEq(age));
+  }
+
+  private BooleanExpression usernameEq(String username) {
+    if (StringUtils.isBlank(username)) {
+      return null;
+    }
+    return member.username.eq(username);
+  }
+
+  private BooleanExpression ageEq(int age) {
+    if (age <= 0) {
+      return null;
+    }
+    return member.age.eq(age);
+  }
+
 }
