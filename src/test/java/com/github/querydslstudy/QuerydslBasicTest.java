@@ -11,6 +11,7 @@ import com.github.querydslstudy.dto.UserDto;
 import com.github.querydslstudy.entity.Member;
 import com.github.querydslstudy.entity.QMember;
 import com.github.querydslstudy.entity.Team;
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.ExpressionUtils;
@@ -25,6 +26,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.platform.commons.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
@@ -651,5 +653,32 @@ public class QuerydslBasicTest {
     }
 
     assertThat(result.size()).isEqualTo(5);
+  }
+
+  @Test
+  public void dynamicQuery_BooleanBuilder() {
+    final String username = "member1";
+    final int age = 10;
+
+    final List<Member> result = searchMember1(username, age);
+
+    assertThat(result.size()).isEqualTo(1);
+  }
+
+  private List<Member> searchMember1(String username, int age) {
+    BooleanBuilder builder = new BooleanBuilder();
+
+    if (StringUtils.isNotBlank(username)) {
+      builder.and(member.username.eq(username));
+    }
+
+    if (age > 0) {
+      builder.and(member.age.eq(age));
+    }
+
+    return queryFactory
+      .selectFrom(member)
+      .where(builder)
+      .fetch();
   }
 }
