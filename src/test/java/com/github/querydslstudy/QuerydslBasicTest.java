@@ -748,4 +748,61 @@ public class QuerydslBasicTest {
     return member.age.eq(age);
   }
 
+  @Test
+  public void bulkUpdate() {
+    final long count = queryFactory
+      .update(member)
+      .set(member.username, "비회원")
+      .where(member.age.lt(28))
+      .execute();
+
+    assertThat(count).isEqualTo(2);
+
+    System.out.println("========================================");
+    final Member persistenceFindMember = queryFactory
+      .selectFrom(member)
+      .where(member.age.eq(10))
+      .fetchOne();
+    assertThat(persistenceFindMember.getUsername()).isEqualTo("member1");
+    System.out.println(persistenceFindMember);
+
+    em.flush();
+    em.clear();
+    System.out.println("========================================");
+    final Member dbFindMember = queryFactory
+      .selectFrom(member)
+      .where(member.age.eq(10))
+      .fetchOne();
+
+    assertThat(dbFindMember.getUsername()).isEqualTo("비회원");
+    System.out.println(dbFindMember);
+  }
+
+  @Test
+  public void bulkAdd() {
+    queryFactory
+      .update(member)
+      .set(member.age, member.age.add(1))
+      .execute();
+
+    queryFactory
+      .update(member)
+      .set(member.age, member.age.add(-10))
+      .execute();
+
+    queryFactory
+      .update(member)
+      .set(member.age, member.age.multiply(2))
+      .execute();
+
+  }
+
+  @Test
+  public void bulkDelete() {
+    queryFactory
+      .delete(member)
+      .where(member.age.gt(20))
+      .execute();
+
+  }
 }
