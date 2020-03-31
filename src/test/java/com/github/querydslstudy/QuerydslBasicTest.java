@@ -11,6 +11,7 @@ import com.github.querydslstudy.entity.Team;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
@@ -412,6 +413,43 @@ public class QuerydslBasicTest {
         select(memberSub.age.avg())
           .from(memberSub)
       )
+      .from(member)
+      .fetch();
+
+    for (Tuple tuple : result) {
+      System.out.println("tuple = " + tuple);
+    }
+
+    assertThat(result.size()).isEqualTo(4);
+  }
+
+  @Test
+  public void basicCase() {
+    final List<String> result = queryFactory
+      .select(
+        member.age
+          .when(10).then("10살")
+          .when(20).then("20살")
+          .otherwise("기타"))
+      .from(member)
+      .fetch();
+
+    for (String s : result) {
+      System.out.println("s = " + s);
+    }
+
+    assertThat(result.size()).isEqualTo(4);
+  }
+
+  @Test
+  public void complexCase() {
+    final List<Tuple> result = queryFactory
+      .select(
+        member.age,
+        new CaseBuilder()
+          .when(member.age.between(0, 20)).then("0~20살")
+          .when(member.age.between(21, 30)).then("21~30살")
+          .otherwise("기타"))
       .from(member)
       .fetch();
 
