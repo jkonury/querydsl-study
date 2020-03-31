@@ -4,6 +4,7 @@ import static com.github.querydslstudy.entity.QMember.member;
 import static com.github.querydslstudy.entity.QTeam.team;
 import static com.querydsl.jpa.JPAExpressions.select;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.iterable;
 
 import com.github.querydslstudy.dto.MemberDto;
 import com.github.querydslstudy.dto.QMemberDto;
@@ -804,5 +805,54 @@ public class QuerydslBasicTest {
       .where(member.age.gt(20))
       .execute();
 
+  }
+
+  @Test
+  public void sqlFunction() {
+    final List<String> result = queryFactory
+      .select(
+        Expressions.stringTemplate(
+          "function('replace', {0}, {1}, {2})",
+          member.username, "member", "M"))
+      .from(member)
+      .fetch();
+
+    for (String s : result) {
+      System.out.println("s = " + s);
+    }
+
+    assertThat(result.size()).isEqualTo(4);
+  }
+
+  @Test
+  public void sqlFunction2() {
+    final List<String> result = queryFactory
+      .select(member.username)
+      .from(member)
+      .where(member.username.eq(
+        Expressions.stringTemplate(
+          "function('lower', {0})", member.username)))
+      .fetch();
+
+    for (String s : result) {
+      System.out.println("s = " + s);
+    }
+
+    assertThat(result.size()).isEqualTo(4);
+  }
+
+  @Test
+  public void sqlFunction3() {
+    final List<String> result = queryFactory
+      .select(member.username)
+      .from(member)
+      .where(member.username.eq(member.username.lower()))
+      .fetch();
+
+    for (String s : result) {
+      System.out.println("s = " + s);
+    }
+
+    assertThat(result.size()).isEqualTo(4);
   }
 }
