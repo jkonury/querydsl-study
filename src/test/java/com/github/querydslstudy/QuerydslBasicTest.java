@@ -634,4 +634,22 @@ public class QuerydslBasicTest {
 
     assertThat(result.size()).isEqualTo(4);
   }
+
+  @Test
+  public void distinct() {
+    em.persist(new Member("member"));
+    em.persist(new Member("member"));
+    em.persist(new Member("member"));
+
+    final List<MemberDto> result = queryFactory
+      .select(new QMemberDto(member.username, member.age)).distinct()
+      .from(member)
+      .fetch();
+
+    for (MemberDto memberDto : result) {
+      System.out.println("memberDto = " + memberDto);
+    }
+
+    assertThat(result.size()).isEqualTo(5);
+  }
 }
