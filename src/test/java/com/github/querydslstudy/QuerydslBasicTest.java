@@ -6,6 +6,7 @@ import static com.querydsl.jpa.JPAExpressions.select;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.github.querydslstudy.dto.MemberDto;
+import com.github.querydslstudy.dto.QMemberDto;
 import com.github.querydslstudy.dto.UserDto;
 import com.github.querydslstudy.entity.Member;
 import com.github.querydslstudy.entity.QMember;
@@ -620,4 +621,17 @@ public class QuerydslBasicTest {
     assertThat(result.size()).isEqualTo(4);
   }
 
+  @Test
+  public void findDtoByQueryProjection() {
+    final List<MemberDto> result = queryFactory
+      .select(new QMemberDto(member.username, member.age))
+      .from(member)
+      .fetch();
+
+    for (MemberDto memberDto : result) {
+      System.out.println("memberDto = " + memberDto);
+    }
+
+    assertThat(result.size()).isEqualTo(4);
+  }
 }
