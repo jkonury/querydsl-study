@@ -2,18 +2,21 @@ package com.github.querydslstudy;
 
 import static com.github.querydslstudy.entity.QMember.member;
 import static com.github.querydslstudy.entity.QTeam.team;
-import static com.querydsl.jpa.JPAExpressions.*;
+import static com.querydsl.jpa.JPAExpressions.select;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.github.querydslstudy.dto.MemberDto;
+import com.github.querydslstudy.dto.UserDto;
 import com.github.querydslstudy.entity.Member;
 import com.github.querydslstudy.entity.QMember;
 import com.github.querydslstudy.entity.Team;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
 import javax.persistence.EntityManager;
@@ -516,4 +519,105 @@ public class QuerydslBasicTest {
     }
     assertThat(result.size()).isEqualTo(4);
   }
+
+  @Test
+  public void findDtoByJPQL() {
+    final List<MemberDto> result = em
+      .createQuery("select new com.github.querydslstudy.dto.MemberDto(m.username, m.age) from Member m",
+        MemberDto.class)
+      .getResultList();
+
+    for (MemberDto memberDto : result) {
+      System.out.println("memberDto = " + memberDto);
+    }
+
+    assertThat(result.size()).isEqualTo(4);
+  }
+
+  @Test
+  public void findDtoBySetter() {
+    final List<MemberDto> result = queryFactory
+      .select(Projections.bean(MemberDto.class,
+        member.username,
+        member.age))
+      .from(member)
+      .fetch();
+
+    for (MemberDto memberDto : result) {
+      System.out.println("memberDto = " + memberDto);
+    }
+
+    assertThat(result.size()).isEqualTo(4);
+  }
+
+  @Test
+  public void findDtoByField() {
+    final List<MemberDto> result = queryFactory
+      .select(Projections.fields(MemberDto.class,
+        member.username,
+        member.age))
+      .from(member)
+      .fetch();
+
+    for (MemberDto memberDto : result) {
+      System.out.println("memberDto = " + memberDto);
+    }
+
+    assertThat(result.size()).isEqualTo(4);
+  }
+
+  @Test
+  public void findDtoByConstructor() {
+    final List<MemberDto> result = queryFactory
+      .select(Projections.constructor(MemberDto.class,
+        member.username,
+        member.age))
+      .from(member)
+      .fetch();
+
+    for (MemberDto memberDto : result) {
+      System.out.println("memberDto = " + memberDto);
+    }
+
+    assertThat(result.size()).isEqualTo(4);
+  }
+
+  @Test
+  public void findUserDtoByField() {
+    QMember memberSub = new QMember("memberSub");
+
+    final List<UserDto> result = queryFactory
+      .select(Projections.fields(UserDto.class,
+        member.username.as("name"),
+        ExpressionUtils.as(
+          select(memberSub.age.max())
+          .from(memberSub), "age"
+        )))
+      .from(member)
+      .fetch();
+
+    for (UserDto userDto : result) {
+      System.out.println("userDto = " + userDto);
+    }
+
+    assertThat(result.size()).isEqualTo(4);
+  }
+
+  @Test
+  public void findUserDtoByConstructor() {
+
+    final List<UserDto> result = queryFactory
+      .select(Projections.constructor(UserDto.class,
+        member.username,
+        member.age))
+      .from(member)
+      .fetch();
+
+    for (UserDto userDto : result) {
+      System.out.println("userDto = " + userDto);
+    }
+
+    assertThat(result.size()).isEqualTo(4);
+  }
+
 }
