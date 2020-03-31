@@ -1,12 +1,10 @@
 package com.github.querydslstudy;
 
 import static com.github.querydslstudy.entity.QMember.member;
-import static com.github.querydslstudy.entity.QTeam.*;
+import static com.github.querydslstudy.entity.QTeam.team;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.github.querydslstudy.entity.Member;
-import com.github.querydslstudy.entity.QMember;
-import com.github.querydslstudy.entity.QTeam;
 import com.github.querydslstudy.entity.Team;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
@@ -14,6 +12,8 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +28,9 @@ public class QuerydslBasicTest {
   EntityManager em;
 
   JPAQueryFactory queryFactory;
+
+  @PersistenceUnit
+  EntityManagerFactory emf;
 
   @BeforeEach
   public void before() {
@@ -134,7 +137,7 @@ public class QuerydslBasicTest {
       .fetchOne();
 
     final Member fetchFirst = queryFactory
-      .selectFrom(QMember.member)
+      .selectFrom(member)
       .fetchFirst();
 
     final QueryResults<Member> results = queryFactory
@@ -316,5 +319,34 @@ public class QuerydslBasicTest {
     }
 
     assertThat(result.size()).isEqualTo(7);
+  }
+
+  @Test
+  public void noFetchJoin() {
+    em.flush();
+    em.clear();
+
+    final Member findMember = queryFactory
+      .selectFrom(member)
+      .where(member.username.eq("member1"))
+      .fetchOne();
+
+    final boolean loaded = emf.getPersistenceUnitUtil().isLoaded(findMember.getTeam());
+    assertThat(loaded).as("페치 조인 미적용").isFalse();
+  }
+
+  @Test
+  public void fetchJoin() {
+    em.flush();
+    em.clear();
+
+    final Member findMember = queryFactory
+      .selectFrom(member)
+      .join(member.team, team).fetchJoin()
+      .where(member.username.eq("member1"))
+      .fetchOne();
+
+    final boolean loaded = emf.getPersistenceUnitUtil().isLoaded(findMember.getTeam());
+    assertThat(loaded).isTrue();
   }
 }
