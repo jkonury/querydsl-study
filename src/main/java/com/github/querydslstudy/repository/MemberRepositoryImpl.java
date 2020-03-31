@@ -7,8 +7,10 @@ import static org.springframework.util.StringUtils.hasText;
 import com.github.querydslstudy.dto.MemberSearchCondition;
 import com.github.querydslstudy.dto.MemberTeamDto;
 import com.github.querydslstudy.dto.QMemberTeamDto;
+import com.github.querydslstudy.entity.Member;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.util.List;
 import org.springframework.data.domain.Page;
@@ -93,7 +95,7 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom {
       .fetch();
 
     // Count Query 분리
-    final long total = queryFactory
+    final JPAQuery<Member> countQuery = queryFactory
       .select(member)
       .from(member)
       .from(member)
@@ -102,10 +104,10 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom {
         usernameEq(condition.getUsername()),
         teamNameEq(condition.getTeamName()),
         ageGoe(condition.getAgeGoe()),
-        ageLoe(condition.getAgeLoe()))
-      .fetchCount();
+        ageLoe(condition.getAgeLoe()));
 
-    return new PageImpl<>(content, pageable, total);
+    return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchCount);
+//    return new PageImpl<>(content, pageable, total);
   }
 
   private BooleanExpression usernameEq(String username) {
